@@ -168,7 +168,7 @@ class FallDetector:
             }
             
         except Exception as e:
-            logger.error(f"❌ Error processing data: {e}")
+            logger.error(f"Error processing data: {e}")
             return {'status': 'error', 'message': str(e)}
     
     def apply_filter(self, accel):
@@ -194,47 +194,47 @@ class FallDetector:
                 self.state = "POSSIBLE_FREEFALL"
                 self.freefall_start_time = current_time
                 self.pre_freefall_orientation = orientation.copy()
-                logger.info("⚠️  POSSIBLE FREEFALL DETECTED")
+                logger.info("POSSIBLE FREEFALL DETECTED")
                 self.send_fall_alert(orientation, total_accel, current_time)
         
         elif self.state == "POSSIBLE_FREEFALL":
             if total_accel > self.FALL_THRESHOLD_LOW:
                 # False alarm
                 self.state = "NORMAL"
-                logger.info("✅ False alarm - returning to normal")
+                logger.info("False alarm - returning to normal")
             elif current_time - self.freefall_start_time > self.FREEFALL_TIME_MIN:
                 self.state = "CONFIRMED_FREEFALL"
-                logger.info("🚨 FREEFALL CONFIRMED - Looking for impact...")
+                logger.info("FREEFALL CONFIRMED - Looking for impact...")
         
         elif self.state == "CONFIRMED_FREEFALL":
             if total_accel > self.IMPACT_THRESHOLD:
                 self.state = "IMPACT_DETECTED"
                 self.impact_time = current_time
-                logger.info("💥 IMPACT DETECTED!")
+                logger.info("IMPACT DETECTED!")
                 
                 # Calculate orientation change
                 roll_change = abs(orientation[0] - self.pre_freefall_orientation[0])
                 pitch_change = abs(orientation[1] - self.pre_freefall_orientation[1])
                 max_orientation_change = max(roll_change, pitch_change)
                 
-                logger.info(f"📐 Orientation change: {max_orientation_change:.1f}°")
+                logger.info(f"Orientation change: {max_orientation_change:.1f}°")
                 
                 if max_orientation_change > self.ORIENTATION_THRESHOLD:
-                    logger.info("🆘 SIGNIFICANT ORIENTATION CHANGE - LIKELY FALL!")
+                    logger.info("SIGNIFICANT ORIENTATION CHANGE - LIKELY FALL!")
                     fall_detected = True
                     self.fall_events_count += 1
                     self.send_fall_alert(orientation, total_accel, current_time)
                 
             elif current_time - self.freefall_start_time > self.IMPACT_TIME_MAX:
                 self.state = "NORMAL"
-                logger.info("⏰ No impact detected - timeout")
+                logger.info("No impact detected - timeout")
         
         elif self.state == "IMPACT_DETECTED":
             # Check if person remains still
             if total_accel < 1.5 and orientation[2] < 50:  # Low movement
                 if current_time - self.impact_time > self.STILL_TIME_THRESHOLD:
-                    logger.info("🚨🚨🚨 FALL DETECTED WITH PROLONGED STILLNESS!")
-                    logger.info("🚨🚨🚨 EMERGENCY RESPONSE RECOMMENDED!")
+                    logger.info("FALL DETECTED WITH PROLONGED STILLNESS!")
+                    logger.info("EMERGENCY RESPONSE RECOMMENDED!")
                     self.state = "POST_FALL_STILL"
                     fall_detected = True
                     if not hasattr(self, '_stillness_alert_sent'):
@@ -245,14 +245,14 @@ class FallDetector:
                 # Person is moving - likely recovered
                 self.state = "NORMAL"
                 self._stillness_alert_sent = False  # Reset flag
-                logger.info("✅ Person is moving - recovery detected")
+                logger.info("Person is moving - recovery detected")
         
         elif self.state == "POST_FALL_STILL":
             # Check for movement indicating recovery
             if total_accel > 1.5 or orientation[2] > 100:
                 self.state = "NORMAL"
                 self._stillness_alert_sent = False  # Reset flag
-                logger.info("✅ Movement detected - person may have recovered")
+                logger.info("Movement detected - person may have recovered")
         
         return fall_detected
     
@@ -290,7 +290,7 @@ class FallDetector:
             'is_expired': False
         }
         
-        logger.info(f"🚨 FALL ALERT: {json.dumps(alert_data, indent=2)}")
+        logger.info(f"FALL ALERT: {json.dumps(alert_data, indent=2)}")
         
         # Save to file
         self.save_fall_event(alert_data)
@@ -330,7 +330,7 @@ class FallDetector:
             with open(self.events_file, 'w') as f:
                 json.dump(self.fall_events, f, indent=2)
             
-            logger.info(f"💾 Fall event resolved")
+            logger.info(f"Fall event resolved")
             
         except Exception as e:
-            logger.error(f"❌ Error saving fall event: {e}")
+            logger.error(f"Error saving fall event: {e}")
