@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Temperature & Humidity Monitor</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+        }
+        .chart-container {
+            margin: 30px 0;
+            height: 400px;
+        }
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        .stat-box {
+            background: #e8f4f8;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            margin: 10px;
+            flex: 1;
+            min-width: 200px;
+        }
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        .stat-label {
+            color: #7f8c8d;
+            margin-top: 5px;
+        }
+        .refresh-btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 0;
+        }
+        .refresh-btn:hover {
+            background: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌡️ Temperature & Humidity Monitor</h1>
+        
+        <button class="refresh-btn" onclick="loadData()">Refresh Data</button>
+        
+        <div class="stats">
+            <div class="stat-box">
+                <div class="stat-value" id="temp-current">--°C</div>
+                <div class="stat-label">Current Temperature</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-value" id="humidity-current">--%</div>
+                <div class="stat-label">Current Humidity</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-value" id="data-points">0</div>
+                <div class="stat-label">Data Points</div>
+            </div>
+        </div>
+
+        <div class="chart-container">
+            <canvas id="temperatureChart"></canvas>
+        </div>
+
+        <div class="chart-container">
+            <canvas id="humidityChart"></canvas>
+        </div>
+    </div>
+
+    <script>
+        let temperatureChart, humidityChart;
+
+        function initCharts() {
+            // Temperature Chart
+            const tempCtx = document.getElementById('temperatureChart').getContext('2d');
+            temperatureChart = new Chart(tempCtx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Temperature (°C)',
+                        data: [],
+                        borderColor: '#ff6b6b',
+                        backgroundColor: 'rgba(255, 107, 107, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Temperature Over Time'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            title: {
+                                display: true,
+                                text: 'Temperature (°C)'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Time'
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Humidity Chart
+            const humidityCtx = document.getElementById('humidityChart').getContext('2d');
+            humidityChart = new Chart(humidityCtx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Humidity (%)',
+                        data: [],
+                        borderColor: '#4ecdc4',
+                        backgroundColor: 'rgba(78, 205, 196, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Humidity Over Time'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            title: {
+                                display: true,
+                                text: 'Humidity (%)'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Time'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function loadData() {
+            fetch('/api/data')
+                .then(response => response.json())
+                .then(data => {
+                    updateCharts(data);
+                    updateStats(data);
+                })
+                .catch(error => console.error('Error loading data:', error));
+        }
+
+        function updateCharts(data) {
+            const labels = data.map(item => new Date(item.timestamp).toLocaleTimeString());
+            const temperatures = data.map(item => item.temperature);
+            const humidities = data.map(item => item.humidity);
+
+            // Update temperature chart
+            temperatureChart.data.labels = labels;
+            temperatureChart.data.datasets[0].data = temperatures;
+            temperatureChart.update();
+
+            // Update humidity chart
+            humidityChart.data.labels = labels;
+            humidityChart.data.datasets[0].data = humidities;
+            humidityChart.update();
+        }
+
+        function updateStats(data) {
+            if (data.length > 0) {
+                const latest = data[data.length - 1];
+                document.getElementById('temp-current').textContent = latest.temperature + '°C';
+                document.getElementById('humidity-current').textContent = latest.humidity + '%';
+            }
+            document.getElementById('data-points').textContent = data.length;
+        }
+
+        // Initialize charts when page loads
+        window.onload = function() {
+            initCharts();
+            loadData();
+            // Auto-refresh every 30 seconds
+            setInterval(loadData, 30000);
+        };
+    </script>
+</body>
+</html>

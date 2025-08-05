@@ -1,0 +1,26 @@
+[
+  {
+    "device_id": "EC:C9:FF:E2:E4:A0",
+    "distance": 3.96165,
+    "threshold": 10,
+    "device_timestamp": 711631,
+    "server_timestamp": "2025-07-22T03:42:59.684749",
+    "id": 1
+  },
+  {
+    "device_id": "EC:C9:FF:E2:E4:A0",
+    "distance": 9.89555,
+    "threshold": 10,
+    "device_timestamp": 717670,
+    "server_timestamp": "2025-07-22T03:43:05.725046",
+    "id": 2
+  },
+  {
+    "device_id": "EC:C9:FF:E2:E4:A0",
+    "distance": 8.18055,
+    "threshold": 10,
+    "device_timestamp": 755152,
+    "server_timestamp": "2025-07-22T03:43:43.204132",
+    "id": 3
+  }
+]

@@ -1,0 +1,26 @@
+[
+  {
+    "timestamp": "2025-07-22T03:43:36.778655",
+    "event_type": "FALL_DETECTED",
+    "severity": "HIGH",
+    "confidence": 0.078,
+    "impact_force": 0.47,
+    "orientation_change": 0.0,
+    "pre_fall_orientation": {
+      "roll": -121.1,
+      "pitch": -64.2,
+      "rotation": 241.9
+    },
+    "current_orientation": {
+      "roll": -121.1,
+      "pitch": -64.2,
+      "rotation": 241.9
+    },
+    "freefall_duration": 0,
+    "location": "Room 204B",
+    "device_id": "SENSOR_001",
+    "patient_id": "PAT-2024-1157",
+    "is_resolved": false,
+    "is_expired": false
+  }
+]
