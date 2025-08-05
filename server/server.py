@@ -1,6 +1,6 @@
 from flask import Flask, request, jsonify, render_template
-from fall_detector import FallDetector
-from collision_detector import load_collision_log, save_collision_log, cleanup_old_entries
+from detectors.fall_detector import FallDetector
+from detectors.collision_detector import load_collision_log, save_collision_log, cleanup_old_entries
 from datetime import datetime
 
 import logging
@@ -20,7 +20,6 @@ start_time = time.time()
 
 @app.route('/fall_data', methods=['POST'])
 def receive_sensor_data():
-    """Endpoint to receive sensor data from ESP32"""
     try:
         data = request.get_json()
         if not data:
@@ -36,7 +35,7 @@ def receive_sensor_data():
             return jsonify(result), 400
             
     except Exception as e:
-        logger.error(f"❌ Error in /sensor_data endpoint: {e}")
+        logger.error(f"Error in /sensor_data endpoint: {e}")
         return jsonify({'error': str(e)}), 500
 
 @app.route('/fall/status', methods=['GET'])
@@ -81,12 +80,10 @@ def get_alerts_count():
 
 @app.route('/')
 def index():
-    """Main dashboard page"""
     return render_template('home.html')
 
 @app.route('/temp')
 def add_data():
-    """Add temperature and humidity data via GET request"""
     try:
         temperature = request.args.get('temperature', type=float)
         humidity = request.args.get('humidity', type=float)
@@ -127,7 +124,6 @@ def add_data():
 
 @app.route('/collision', methods=['POST'])
 def log_collision():
-    """Endpoint to receive and log collision alerts from ESP32"""
     try:
         # Get JSON data from request
         collision_data_request = request.get_json()
@@ -171,7 +167,6 @@ def log_collision():
 
 @app.route('/collisions', methods=['GET'])
 def get_collisions():
-    """Endpoint to retrieve collision log"""
     try:
         # Load collision log
         collision_log = load_collision_log()
@@ -203,7 +198,6 @@ def get_collisions():
 
 @app.route('/collisions/stats', methods=['GET'])
 def get_collision_stats():
-    """Endpoint to get collision statistics"""
     try:
         collision_log = load_collision_log()
         
@@ -245,12 +239,10 @@ def get_collision_stats():
 
 @app.route('/api/data')
 def get_data():
-    """Get all stored sensor data"""
     return jsonify(sensor_data)
 
 @app.route('/clear')
 def clear_data():
-    """Clear all stored data"""
     global sensor_data
     count = len(sensor_data)
     sensor_data = []
@@ -261,7 +253,6 @@ def clear_data():
 
 @app.route('/api/stats')
 def get_stats():
-    """Get basic statistics"""
     if not sensor_data:
         return jsonify({'error': 'No data available'})
     
@@ -291,9 +282,9 @@ def get_stats():
     return jsonify(stats)
 
 if __name__ == '__main__':
-    print("🌡️ Temperature & Humidity Server Starting...")
-    print("📊 Dashboard: http://localhost:5000")
-    print("📡 Add data: http://localhost:5000/data?temperature=25.5&humidity=60.2")
-    print("🔍 View data: http://localhost:5000/api/data")
-    print("🗑️ Clear data: http://localhost:5000/clear")
+    print("Temperature & Humidity Server Starting...")
+    print("Dashboard: http://localhost:5000")
+    print("Add data: http://localhost:5000/data?temperature=25.5&humidity=60.2")
+    print("View data: http://localhost:5000/api/data")
+    print("Clear data: http://localhost:5000/clear")
     app.run(debug=True, host='0.0.0.0', port=5000)

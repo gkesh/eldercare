@@ -12,7 +12,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 class FallDetector:
-    def __init__(self, events_file="fall_events.json"):
+    def __init__(self, events_file="logs/fall_events.json"):
         # Fall detection parameters
         self.FALL_THRESHOLD_LOW = 0.5      # Low acceleration threshold (g)
         self.FALL_THRESHOLD_HIGH = 2.5     # High acceleration threshold (g) 
@@ -42,27 +42,25 @@ class FallDetector:
         self.fall_events_count = len(self.fall_events)  # Count from loaded events
         self.last_packet_time = time.time()
         
-        logger.info("🚀 Fall Detection System Initialized")
-        logger.info(f"📁 Events file: {self.events_file}")
-        logger.info(f"📊 Loaded {len(self.fall_events)} existing fall events")
+        logger.info("Fall Detection System Initialized")
+        logger.info(f"Events file: {self.events_file}")
+        logger.info(f"Loaded {len(self.fall_events)} existing fall events")
         logger.info(f"Thresholds: Low={self.FALL_THRESHOLD_LOW}g, High={self.FALL_THRESHOLD_HIGH}g, Impact={self.IMPACT_THRESHOLD}g")
     
     def load_fall_events(self):
-        """Load fall events from file"""
         try:
             if os.path.exists(self.events_file):
                 with open(self.events_file, 'r') as f:
                     self.fall_events = json.load(f)
-                    logger.info(f"✅ Loaded {len(self.fall_events)} fall events from file")
+                    logger.info(f"Loaded {len(self.fall_events)} fall events from file")
             else:
                 self.fall_events = []
-                logger.info("📝 No existing events file found, starting fresh")
+                logger.info("No existing events file found, starting fresh")
         except Exception as e:
-            logger.error(f"❌ Error loading fall events: {e}")
+            logger.error(f"Error loading fall events: {e}")
             self.fall_events = []
     
     def save_fall_event(self, event_data):
-        """Save a new fall event to file"""
         try:
             if len(self.fall_events) > 0:
                 self.fall_events[-1]['is_expired'] = True
@@ -78,13 +76,12 @@ class FallDetector:
             with open(self.events_file, 'w') as f:
                 json.dump(self.fall_events, f, indent=2)
             
-            logger.info(f"💾 Fall event saved to {self.events_file}")
+            logger.info(f"Fall event saved to {self.events_file}")
             
         except Exception as e:
-            logger.error(f"❌ Error saving fall event: {e}")
+            logger.error(f"Error saving fall event: {e}")
     
     def get_fall_events(self, limit=None):
-        """Get fall events from file (most recent first)"""
         try:
             # Reload from file to get latest events
             self.load_fall_events()
@@ -100,21 +97,19 @@ class FallDetector:
             return sorted_events
             
         except Exception as e:
-            logger.error(f"❌ Error getting fall events: {e}")
+            logger.error(f"Error getting fall events: {e}")
             return []
     
     def clear_fall_events(self):
-        """Clear all fall events (for testing/maintenance)"""
         try:
             self.fall_events = []
             with open(self.events_file, 'w') as f:
                 json.dump([], f)
-            logger.info("🗑️ All fall events cleared")
+            logger.info("All fall events cleared")
         except Exception as e:
-            logger.error(f"❌ Error clearing fall events: {e}")
+            logger.error(f"Error clearing fall events: {e}")
     
     def process_sensor_data(self, data):
-        """Process incoming sensor data and detect falls"""
         try:
             timestamp = data.get('timestamp', 0)
             accel = data['accelerometer']
@@ -157,8 +152,8 @@ class FallDetector:
             
             # Log significant events
             if self.total_packets % 200 == 0:  # Every 10 seconds at 20Hz
-                logger.info(f"📊 Stats: {self.total_packets} packets, {len(self.fall_events)} fall events")
-                logger.info(f"📊 Current: {total_accel:.2f}g, {temperature:.1f}°C, State: {self.state}")
+                logger.info(f"Stats: {self.total_packets} packets, {len(self.fall_events)} fall events")
+                logger.info(f"Current: {total_accel:.2f}g, {temperature:.1f}°C, State: {self.state}")
             
             return {
                 'status': 'success',
@@ -177,7 +172,6 @@ class FallDetector:
             return {'status': 'error', 'message': str(e)}
     
     def apply_filter(self, accel):
-        """Apply moving average filter to reduce noise"""
         self.filter_buffer.append(accel)
         
         if len(self.filter_buffer) < 3:
@@ -191,7 +185,6 @@ class FallDetector:
         return filtered
     
     def detect_fall(self, timestamp, total_accel, orientation, gyro):
-        """Main fall detection logic"""
         current_time = timestamp
         fall_detected = False
         
@@ -264,7 +257,6 @@ class FallDetector:
         return fall_detected
     
     def send_fall_alert(self, orientation, total_accel, timestamp, alert_type="FALL_DETECTED"):
-        """Send fall alert and save to file"""
         # Calculate confidence score based on multiple factors
         orientation_change = max(abs(orientation[0] - self.pre_freefall_orientation[0]),
                                abs(orientation[1] - self.pre_freefall_orientation[1]))
@@ -303,13 +295,7 @@ class FallDetector:
         # Save to file
         self.save_fall_event(alert_data)
         
-        # Here you can add additional notification methods:
-        # - Send email notification
-        # - Send SMS via Twilio
-        # - Call emergency contacts
-        # - Send push notification
-        # - Log to database
-        # - Trigger IoT devices (lights, alarms)
+        # TODO: Implement real-time notification
     
     def get_last_state(self):
         current_state = self.state
@@ -337,7 +323,6 @@ class FallDetector:
         }
     
     def resolve_alert(self):
-        """Save a new fall event to file"""
         try:
             self.fall_events[-1]['is_resolved'] = True
             
